@@ -1,0 +1,30 @@
+name: Actualizar casks
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: actualizar
+  cancel-in-progress: false
+
+jobs:
+  polarbat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Buscar versión nueva
+        run: python3 scripts/actualizar-polarbat.py
+      - name: Guardar el cambio
+        run: |
+          if git diff --quiet; then exit 0; fi
+          version=$(sed -n 's/^  version "\(.*\)"/\1/p' Casks/polarbat.rb)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "polarbat ${version}"
+          git push
